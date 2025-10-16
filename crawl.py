@@ -51,7 +51,7 @@ def convert_home_type(text):
         return "N/A"
 
 try:
-    for i in range(1, 2):
+    for i in range(1, 200):
         link = link_base + str(i)
         print(f"crawl page: {link}")
         driver.get(link)
@@ -121,8 +121,16 @@ try:
                     except:
                         detail_link = None
 
+                    try:
+                        card_info = element.find_element(By.XPATH, "./ancestor::div[@class='re__card-info']")
+                        published_at_tag = card_info.find_element(By.CSS_SELECTOR, "span.re__card-published-info-published-at")
+                        published_date = published_at_tag.get_attribute("aria-label")
+                    except:
+                        published_date = "N/A"
+
                     listing_data.append({
                         "page": i,
+                        "published_date": published_date,
                         "price": price,
                         "area": area,
                         "price_per_m2": price_per_m2,
@@ -152,8 +160,6 @@ try:
                         # lay all
                         specs_items = driver.find_elements(By.CLASS_NAME, "re__pr-specs-content-item")
                         for item in specs_items:
-                            legal_status = 'N/A'
-                            furniture = 'N/A'
                             title = item.find_element(By.CLASS_NAME, "re__pr-specs-content-item-title").text
                             value = item.find_element(By.CLASS_NAME, "re__pr-specs-content-item-value").text
 
@@ -169,12 +175,13 @@ try:
                             link_se_title = "N/A"
                             home_type = "N/A"
 
+                        data["home_type"] = home_type
                         data["legal_status"] = legal_status
                         data["furniture"] = furniture
-                        data["home_type"] = home_type
+
                         listings.append(data)
 
-                        print(f"Tin đăng: {data}")
+                        print(f"data: {data}, page: {i}")
                         time.sleep(random.uniform(1, 3))
 
                     except Exception as e:
@@ -194,4 +201,4 @@ finally:
 
 df = pd.DataFrame(listings)
 df = df.drop(columns=['detail_link'])
-df.to_csv('real_estate_listings.csv', index=False, encoding='utf-8-sig')
+df.to_csv('bds-hn-data.csv', index=False, encoding='utf-8-sig')
