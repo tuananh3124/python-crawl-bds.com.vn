@@ -1,0 +1,12 @@
+{
+  "feature_order": [
+    "area",
+    "bedroom",
+    "wc",
+    "location",
+    "home_type",
+    "legal_status",
+    "furniture",
+    "published_month"
+  ]
+}

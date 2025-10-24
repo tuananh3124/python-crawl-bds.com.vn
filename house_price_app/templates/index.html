@@ -1,0 +1,113 @@
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dự đoán giá nhà (Linear Regression)</title>
+    <style>
+      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 24px; max-width: 900px; margin: auto; }
+      .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+      label { display:block; font-weight:600; margin: 10px 0 6px; }
+      input, select { width:100%; padding: 10px; border-radius:10px; border:1px solid #cbd5e1; }
+      button { padding: 12px 18px; border: 0; border-radius: 12px; background: #111827; color: white; font-weight: 600; cursor:pointer; }
+      .row { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .result { font-size: 20px; font-weight: 700; }
+      .muted { color:#6b7280; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>🏠 Dự đoán giá nhà – Linear Regression</h1>
+    <p class="muted">Mô hình: Hồi quy tuyến tính với <em>log(price)</em>, chuẩn hóa biến số, target-encoding cho biến hạng mục.</p>
+
+    <div class="card">
+      <form id="form">
+        <div class="row">
+          <div>
+            <label>Diện tích (m²)</label>
+            <input id="area" name="area" type="number" step="0.1" required>
+          </div>
+          <div>
+            <label>Phòng ngủ</label>
+            <input id="bedroom" name="bedroom" type="number" step="1" required>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>WC</label>
+            <input id="wc" name="wc" type="number" step="1" required>
+          </div>
+          <div>
+            <label>Ngày đăng tin</label>
+            <input id="published_date" name="published_date" type="date">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Khu vực (location)</label>
+            <select id="location" name="location"></select>
+          </div>
+          <div>
+            <label>Loại nhà</label>
+            <select id="home_type" name="home_type"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Pháp lý</label>
+            <select id="legal_status" name="legal_status"></select>
+          </div>
+          <div>
+            <label>Nội thất</label>
+            <select id="furniture" name="furniture"></select>
+          </div>
+        </div>
+
+        <br>
+        <button type="submit">Dự đoán giá</button>
+      </form>
+    </div>
+
+    <div id="output" class="card" style="display:none;">
+      <div class="result">Giá dự đoán: <span id="price"></span> VND</div>
+      <div class="muted">*Lưu ý: kết quả ước tính từ dữ liệu lịch sử, chỉ mang tính tham khảo.</div>
+    </div>
+
+    <script>
+      async function loadMeta() { 
+        const res = await fetch('/metadata'); 
+        const meta = await res.json();
+        document.getElementById('area').placeholder = meta.placeholders.area.toFixed(1);
+        document.getElementById('bedroom').placeholder = meta.placeholders.bedroom.toFixed(0);
+        document.getElementById('wc').placeholder = meta.placeholders.wc.toFixed(0);
+        const fill = (id, arr) => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = arr.map(v => `<option value="${v}">${v}</option>`).join('');
+        };
+        fill('location', meta.choices.location || []);
+        fill('home_type', meta.choices.home_type || []);
+        fill('legal_status', meta.choices.legal_status || []);
+        fill('furniture', meta.choices.furniture || []);
+      }
+      loadMeta();
+
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = Object.fromEntries(new FormData(e.target).entries());
+        const res = await fetch('/predict', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+        const out = document.getElementById('output');
+        const span = document.getElementById('price');
+        if (data.ok) {
+          span.textContent = data.predicted_price_vnd.toLocaleString('vi-VN');
+          out.style.display = 'block';
+        } else {
+          span.textContent = 'Lỗi: ' + (data.error || 'Không xác định');
+          out.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>
