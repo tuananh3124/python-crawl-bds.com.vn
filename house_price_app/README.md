@@ -14,6 +14,10 @@ cd house_price_app
 source .venv/bin/activate  # (on Windows: .venv\Scripts\activate)
 pip3 install flask numpy pandas scikit-learn
 python3 app.py
+
+##cd /Users/dotung/python-crawl-bds.com.vn/house_price_app
+##pip3 install --user flask numpy pandas scikit-learn
+##python3 app.py
 # open http://localhost:8000
 ```
 
